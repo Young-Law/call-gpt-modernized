@@ -1,119 +1,52 @@
 // create metadata for all the available functions to pass to completions API
 const tools = [
   {
-   /*  type: 'function',
-    function: {
-      name: 'checkInventory',
-      say: 'Let me check our inventory right now.',
-      description: 'Check the inventory of airpods, airpods pro or airpods max.',
-      parameters: {
-        type: 'object',
-        properties: {
-          model: {
-            type: 'string',
-            'enum': ['airpods', 'airpods pro', 'airpods max'],
-            description: 'The model of airpods, either the airpods, airpods pro or airpods max',
-          },
-        },
-        required: ['model'],
-      },
-      returns: {
-        type: 'object',
-        properties: {
-          stock: {
-            type: 'integer',
-            description: 'An integer containing how many of the model are in currently in stock.'
-          }
-        }
-      }
-    },
-  },
-  {
     type: 'function',
     function: {
-      name: 'checkPrice',
-      say: 'Let me check the price, one moment.',
-      description: 'Check the price of given model of airpods, airpods pro or airpods max.',
+      name: 'createCrmLeadAndEvent',
+      say: 'Of course. Let me get that scheduled for you.',
+      description: 'Creates a new lead in the CRM and schedules an appointment for them. If the lead already exists, it schedules the appointment for the existing lead.',
       parameters: {
         type: 'object',
         properties: {
-          model: {
+          first_name: {
             type: 'string',
-            'enum': ['airpods', 'airpods pro', 'airpods max'],
-            description: 'The model of airpods, either the airpods, airpods pro or airpods max',
+            description: 'The first name of the person scheduling the appointment.',
+          },
+          last_name: {
+            type: 'string',
+            description: 'The last name of the person scheduling the appointment.',
+          },
+          email: {
+            type: 'string',
+            description: 'The email address of the person.',
+          },
+          phone: {
+            type: 'string',
+            description: 'The phone number of the person.',
+          },
+          event_title: {
+            type: 'string',
+            description: 'The title or name of the event.',
+          },
+          start_datetime: {
+            type: 'string',
+            description: "The start date and time for the appointment in ISO 8601 format (e.g., '2025-07-20T14:00:00-05:00').",
+          },
+          end_datetime: {
+            type: 'string',
+            description: "The end date and time for the appointment in ISO 8601 format (e.g., '2025-07-20T14:30:00-05:00').",
           },
         },
-        required: ['model'],
-      },
-      returns: {
-        type: 'object',
-        properties: {
-          price: {
-            type: 'integer',
-            description: 'the price of the model'
-          }
-        }
-      }
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'placeOrder',
-      say: 'All right, I\'m just going to ring that up in our system.',
-      description: 'Places an order for a set of airpods.',
-      parameters: {
-        type: 'object',
-        properties: {
-          model: {
-            type: 'string',
-            'enum': ['airpods', 'airpods pro'],
-            description: 'The model of airpods, either the regular or pro',
-          },
-          quantity: {
-            type: 'integer',
-            description: 'The number of airpods they want to order',
-          },
-        },
-        required: ['type', 'quantity'],
-      },
-      returns: {
-        type: 'object',
-        properties: {
-          price: {
-            type: 'integer',
-            description: 'The total price of the order including tax'
-          },
-          orderNumber: {
-            type: 'integer',
-            description: 'The order number associated with the order.'
-          }
-        }
-      }
-    },
-  }, */
-    type: 'function',
-    function: {
-      name: 'transferCall',
-      say: 'One moment while I transfer your call.',
-      description: 'Transfers the customer to a live agent in case they request help from a real person.',
-      parameters: {
-        type: 'object',
-        properties: {
-          callSid: {
-            type: 'string',
-            description: 'The unique identifier for the active phone call.',
-          },
-        },
-        required: ['callSid'],
+        required: ['first_name', 'last_name', 'email', 'phone', 'event_title', 'start_datetime', 'end_datetime'],
       },
       returns: {
         type: 'object',
         properties: {
           status: {
             type: 'string',
-            description: 'Whether or not the customer call was successfully transfered'
-          },
+            description: 'A status message indicating if the lead and event were created successfully.'
+          }
         }
       }
     },
@@ -121,41 +54,38 @@ const tools = [
   {
     type: 'function',
     function: {
-        name: 'book_appointment_in_zoho_bookings',
-        description: 'function to book an appointment with the client.',
-        parameters: {
-          type: 'object',
-          properties: {
-            First_Name: {
-              type: 'string',
-              description: 'First name of the customer'
-            },
-            Last_Name: {
-              type: 'string',
-              description: 'Last name of the customer'
-            },
-            Case_Number: {
-              type: 'string',
-              description: 'Unique identifier for the case'
-            },
-            Appointment_Time: {
-              type: 'string',
-              description: 'Desired time for the appointment in ISO 8601 format'
-            }
+      name: 'checkAvailability',
+      say: 'One moment while I check the calendar.',
+      description: 'Checks the CRM calendar for existing events to see if a requested time slot is free before scheduling an appointment.',
+      parameters: {
+        type: 'object',
+        properties: {
+          start_datetime: {
+            type: 'string',
+            description: "The start date and time for the proposed appointment in ISO 8601 format (e.g., '2025-07-20T14:00:00-05:00').",
+          },
+          end_datetime: {
+            type: 'string',
+            description: "The end date and time for the proposed appointment in ISO 8601 format (e.g., '2025-07-20T14:30:00-05:00').",
           },
         },
-      required: ['First_Name', 'Last_Name', 'Case_Number', 'Appointment_Time'],
+        required: ['start_datetime', 'end_datetime'],
       },
       returns: {
         type: 'object',
         properties: {
-          status: {
-            type: 'string',
-            description: 'Whether or not the appointment was successfully booked.'
+          is_available: {
+            type: 'boolean',
+            description: 'True if the time slot is available, false otherwise.'
           },
+          message: {
+            type: 'string',
+            description: 'A message indicating the availability status.'
+          }
         }
       }
-      }
-  ];
+    }
+  }
+];
 
 module.exports = tools;

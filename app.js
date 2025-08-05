@@ -1,22 +1,24 @@
 require('dotenv').config();
 require('colors');
-
 const express = require('express');
 const ExpressWs = require('express-ws');
-
 const { GptService } = require('./services/gpt-service');
 const { StreamService } = require('./services/stream-service');
 const { TranscriptionService } = require('./services/transcription-service');
 const { TextToSpeechService } = require('./services/tts-service');
 const { recordingService } = require('./services/recording-service');
-
 const VoiceResponse = require('twilio').twiml.VoiceResponse;
-
 const app = express();
 ExpressWs(app);
-
-const PORT = process.env.PORT || 3000;
-
+const PORT = process.env.PORT || 8080;
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1); 
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1); 
+});
 app.post('/incoming', (req, res) => {
   try {
     const response = new VoiceResponse();
@@ -43,22 +45,19 @@ app.ws('/connection', (ws) => {
     const ttsService = new TextToSpeechService({});
   
     let marks = [];
-    let interactionCount = 0;
-  
+    let interactionCount = 0;  
     // Incoming from MediaStream
     ws.on('message', function message(data) {
       const msg = JSON.parse(data);
       if (msg.event === 'start') {
         streamSid = msg.start.streamSid;
-        callSid = msg.start.callSid;
-        
+        callSid = msg.start.callSid;      
         streamService.setStreamSid(streamSid);
         gptService.setCallSid(callSid);
-
         // Set RECORDING_ENABLED='true' in .env to record calls
         recordingService(ttsService, callSid).then(() => {
           console.log(`Twilio -> Starting Media Stream for ${streamSid}`.underline.red);
-          ttsService.generate({partialResponseIndex: null, partialResponse: 'Hello, and thank you for calling E. Orum Young Law, LLC. How may i be of service to you today?'}, 0);
+          ttsService.generate({partialResponseIndex: null, partialResponse: 'Hello, and thank you for calling E Orum Young Law, LLC. How may we be of service to you today?'}, 0);
         });
       } else if (msg.event === 'media') {
         transcriptionService.send(msg.media.payload);
@@ -110,5 +109,6 @@ app.ws('/connection', (ws) => {
   }
 });
 
-app.listen(PORT);
-console.log(`Server running on port ${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
