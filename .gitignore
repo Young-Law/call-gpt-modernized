@@ -152,3 +152,4 @@ fly.toml
 node_modules
 dockerfile_python
 >>>>>>> f6d265d (GCP CLoud Run branch init)
+openai-assistant-sdk/
