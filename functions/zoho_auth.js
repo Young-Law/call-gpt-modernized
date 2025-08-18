@@ -1,12 +1,12 @@
-//require('dotenv').config();
+require('dotenv').config();
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-const ZOHO_CLIENT_ID = "1000.MSQ6UUM7ZXNMWXXE73OMGQ1IPDODGP";
-const ZOHO_CLIENT_SECRET = "8b78035f327b7e22a18f3d514c1118e166dfbad648";
-const ZOHO_GRANT_TOKEN = "1000.d4ead7125d857f8b4cb51395cb47bf78.897869ee4a16e34b45ee11e9ac64cdd8";
-let ZOHO_REFRESH_TOKEN = "1000.e9fb9e657a95f0c72f7c80275ccd47bd.01d451cf05aa125d842909dbe795c453";
+const ZOHO_CLIENT_ID = "process.env.ZOHO_CLIENT_ID";
+const ZOHO_CLIENT_SECRET = "process.env.ZOHO_CLIENT_SECRET";
+const ZOHO_GRANT_TOKEN = "process.env.ZOHO_GRANT_TOKEN";
+let ZOHO_REFRESH_TOKEN = "process.env.ZOHO_REFRESH_TOKEN";
 
 //const envPath = path.resolve(__dirname, '../.env');
 
