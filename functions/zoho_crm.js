@@ -3,6 +3,62 @@ const { executeWithAuthRetry } = require('./zoho_auth');
 
 const ZOHO_CRM_API_URL = 'https://www.zohoapis.com/crm/v2';
 
+function parseSelectionList(rawList) {
+    if (!rawList) {
+        return [];
+    }
+
+    try {
+        const parsed = JSON.parse(rawList);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+        console.warn('Unable to parse Zoho selection list JSON:', error.message);
+        return [];
+    }
+}
+
+function listAppointmentTypes() {
+    return parseSelectionList(process.env.ZOHO_APPOINTMENT_TYPES);
+}
+
+function listStaffMembers() {
+    return parseSelectionList(process.env.ZOHO_STAFF_MEMBERS);
+}
+
+function resolveSelection({ selection, list, idKeys, label }) {
+    if (!selection) {
+        return null;
+    }
+
+    const normalizedSelection = String(selection).trim().toLowerCase();
+
+    if (list.length === 0) {
+        return selection;
+    }
+
+    const match = list.find((item) => {
+        if (!item || typeof item !== 'object') {
+            return false;
+        }
+
+        const nameMatch = item.name && String(item.name).trim().toLowerCase() === normalizedSelection;
+        if (nameMatch) {
+            return true;
+        }
+
+        return idKeys.some((key) => item[key] && String(item[key]).trim().toLowerCase() === normalizedSelection);
+    });
+
+    if (!match) {
+        const options = list
+            .map((item) => item?.name || item?.id || item?.resource_id || item?.staff_id)
+            .filter(Boolean)
+            .join(', ');
+        throw new Error(`${label} "${selection}" not found. Available options: ${options || 'none configured'}.`);
+    }
+
+    const idKey = idKeys.find((key) => match[key]);
+    return match[idKey] || selection;
 function withAuthHeaders(token) {
   return { Authorization: `Zoho-oauthtoken ${token}` };
 }
@@ -43,6 +99,8 @@ async function createCrmLead(leadDetails) {
 
 // --- Function to Create an Event (Appointment) ---
 async function createCrmEvent(eventDetails) {
+    const token = await getAccessToken();
+    const { event_title, start_datetime, end_datetime, lead_id, appointment_type, staff_member } = eventDetails;
   const { event_title, start_datetime, end_datetime, lead_id } = eventDetails;
 
   const eventPayload = {
@@ -59,6 +117,36 @@ async function createCrmEvent(eventDetails) {
     };
   }
 
+    const appointmentTypes = listAppointmentTypes();
+    const staffMembers = listStaffMembers();
+    const resourceId = resolveSelection({
+        selection: appointment_type,
+        list: appointmentTypes,
+        idKeys: ['resource_id', 'id'],
+        label: 'Appointment type',
+    });
+    const staffId = resolveSelection({
+        selection: staff_member,
+        list: staffMembers,
+        idKeys: ['staff_id', 'id'],
+        label: 'Staff member',
+    });
+
+    if (resourceId) {
+        eventPayload.Resource_Id = resourceId;
+    }
+
+    if (staffId) {
+        eventPayload.Staff_Id = staffId;
+    }
+
+    // If a lead_id is provided, link the event to that lead.
+    if (lead_id) {
+        eventPayload.$se_module = 'Leads';
+        eventPayload.What_Id = {
+            id: lead_id
+        };
+    }
   const eventData = {
     data: [eventPayload],
   };
@@ -134,6 +222,12 @@ async function getEventsByTimeRange(start_datetime, end_datetime) {
 }
 
 module.exports = {
+    createCrmLead,
+    createCrmEvent,
+    findCrmLeadByEmail,
+    getEventsByTimeRange,
+    listAppointmentTypes,
+    listStaffMembers,
   createCrmLead,
   createCrmEvent,
   findCrmLeadByEmail,
