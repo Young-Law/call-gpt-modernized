@@ -32,20 +32,32 @@ class CallRuntime {
     });
 
     this.transcriptionService.on('utterance', async (text) => {
-      if (this.marks.length > 0 && text?.length > 5) {
-        this.ws.send(JSON.stringify({ streamSid: this.streamSid, event: 'clear' }));
+      try {
+        if (this.marks.length > 0 && text?.length > 5) {
+          this.ws.send(JSON.stringify({ streamSid: this.streamSid, event: 'clear' }));
+        }
+      } catch (error) {
+        console.error('Error handling utterance event:', error.message);
       }
     });
 
     this.transcriptionService.on('transcription', async (text) => {
-      if (!text) return;
-      await this.gptService.completion(text, this.interactionCount);
-      this.interactionCount += 1;
-      await this.saveSessionState('active');
+      try {
+        if (!text) return;
+        await this.gptService.completion(text, this.interactionCount);
+        this.interactionCount += 1;
+        await this.saveSessionState('active');
+      } catch (error) {
+        console.error('Error handling transcription event:', error.message);
+      }
     });
 
     this.gptService.on('gptreply', async (gptReply, icount) => {
-      await this.ttsService.generate(gptReply, icount);
+      try {
+        await this.ttsService.generate(gptReply, icount);
+      } catch (error) {
+        console.error('Error handling gptreply event:', error.message);
+      }
     });
 
     this.ttsService.on('speech', (responseIndex, audio) => {
@@ -73,8 +85,15 @@ class CallRuntime {
     this.streamService.setStreamSid(this.streamSid);
     this.gptService.setCallSid(this.callSid);
     await this.saveSessionState('started');
-    await this.recordingService(this.ttsService, this.callSid);
-    this.ttsService.generate({ partialResponseIndex: null, partialResponse: 'Hello, and thank you for calling E Orum Young Law, LLC. How may we be of service to you today?' }, 0);
+
+    this.ttsService.generate({
+      partialResponseIndex: null,
+      partialResponse: 'Hello, and thank you for calling E Orum Young Law, LLC. How may we be of service to you today?',
+    }, 0);
+
+    Promise.resolve(this.recordingService(this.ttsService, this.callSid)).catch((error) => {
+      console.error('Recording setup failed:', error.message);
+    });
   }
 
   async saveSessionState(status) {
