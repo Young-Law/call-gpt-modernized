@@ -1,20 +1,137 @@
-# call-gpt
+# Call-GPT
 
-## Testing during modernization
+A Twilio voice AI application for automated phone call handling with OpenAI GPT-4 and Deepgram speech processing.
 
-This repository is currently in a partial modernization state (runtime logic moving into `src/` while some legacy modules remain in `functions/`).
+## Features
 
-To keep CI and Codex automation reliable during this transition:
+- **Real-time Speech-to-Text**: Powered by Deepgram Nova-2
+- **AI Conversation**: OpenAI GPT-4 for natural language understanding
+- **Text-to-Speech**: Deepgram TTS for natural voice responses
+- **CRM Integration**: Zoho CRM for lead management and appointment scheduling
+- **Session Management**: Redis-backed session state for call persistence
 
-- `npm test` now runs `npm run check`
-- `npm run check` performs `node --check` on critical entrypoints/modules to catch syntax and structural regressions quickly
-- Legacy Jest suites are still available via `npm run test:legacy`
-- New focused modernization tests can be run via `npm run test:modern`
+## Architecture
 
-Once legacy modules are fully restored/ported, `npm test` can be switched back to the full test suite.
+```
+src/
+├── app.ts                    # Application entry point
+├── config/                   # Configuration management
+│   ├── env.ts               # Environment variable utilities
+│   ├── index.ts             # Config exports
+│   └── validateEnv.ts       # Environment validation
+├── http/                     # HTTP/WebSocket routes
+│   ├── connectionRouter.ts  # WebSocket connection handling
+│   └── incomingRouter.ts    # Twilio webhook endpoint
+├── services/                 # Core services
+│   ├── gpt-service.ts       # OpenAI integration
+│   ├── transcription-service.ts  # Deepgram STT
+│   ├── tts-service.ts       # Deepgram TTS
+│   ├── stream-service.ts    # Audio stream management
+│   └── recording-service.ts # Call recording
+├── session/                  # Session management
+│   └── CallSessionManager.ts
+├── state/                    # State persistence
+│   └── RedisSessionStore.ts
+├── tools/                    # Tool definitions & handlers
+│   ├── tool-definitions.ts  # Tool metadata
+│   ├── manifest.ts          # OpenAI tool manifest
+│   ├── registry.ts          # Tool handler registry
+│   └── handlers/            # Tool implementations
+│       ├── checkAvailability.ts
+│       ├── createCRMLeadAndEvent.ts
+│       ├── listAppointmentTypes.ts
+│       ├── listStaffMembers.ts
+│       └── zoho_*.ts        # Zoho CRM integration
+├── integrations/             # External integrations
+│   └── zoho/                # Zoho CRM client
+└── types/                    # TypeScript type definitions
+    └── index.ts
+```
 
-## Tooling boundary during modernization
+## Prerequisites
 
-- Tool handlers now live in `src/tools/handlers/`.
-- Tool metadata is declarative in `src/tools/tool-definitions.js`, with OpenAI manifest output in `src/tools/manifest.js`.
-- `src/tools/registry.js` builds the runtime tool mapping from those definitions to prevent manifest/handler drift.
+- Node.js >= 18
+- Redis (optional, for session persistence)
+- Twilio account with phone number
+- OpenAI API key
+- Deepgram API key
+- Zoho CRM account (for CRM features)
+
+## Installation
+
+```bash
+npm install
+```
+
+## Configuration
+
+Create a `.env` file with the following variables:
+
+```env
+# Required
+DEEPGRAM_API_KEY=your_deepgram_api_key
+VOICE_MODEL=aura-asteria-en
+OPENAI_API_KEY=your_openai_api_key
+
+# Optional
+PORT=8080
+OPENAI_MODEL=gpt-4o-mini
+RECORDING_ENABLED=false
+
+# Twilio (if recording enabled)
+TWILIO_ACCOUNT_SID=your_account_sid
+TWILIO_AUTH_TOKEN=your_auth_token
+
+# Zoho CRM
+ZOHO_CLIENT_ID=your_client_id
+ZOHO_CLIENT_SECRET=your_client_secret
+ZOHO_REFRESH_TOKEN=your_refresh_token
+ZOHO_APPOINTMENT_TYPES=[{"id":"1","name":"Consultation"}]
+ZOHO_STAFF_MEMBERS=[{"id":"1","name":"Staff Name"}]
+
+# Redis (optional)
+REDIS_URL=redis://localhost:6379
+```
+
+## Development
+
+```bash
+# Start development server
+npm run dev
+
+# Type checking
+npm run typecheck
+
+# Linting
+npm run lint
+
+# Run tests
+npm test
+```
+
+## Production
+
+```bash
+# Build
+npm run build
+
+# Start production server
+npm start
+```
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/incoming` | POST | Twilio webhook for incoming calls |
+| `/connection` | WS | WebSocket for media stream |
+| `/healthz` | GET | Health check endpoint |
+| `/readyz` | GET | Readiness check endpoint |
+
+## Deployment
+
+See `deploy/` directory for Docker and Kubernetes deployment configurations.
+
+## License
+
+MIT

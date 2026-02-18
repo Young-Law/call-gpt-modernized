@@ -1,9 +1,0 @@
-{
-  "compilerOptions": {
-    "checkJs": true,
-    "noEmit": true,
-    "target": "ES2022",
-    "module": "commonjs"
-  },
-  "include": ["src/**/*.js", "app.js", "scripts/**/*.js", "test/modern/**/*.js"]
-}
