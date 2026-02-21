@@ -1,5 +1,5 @@
-import { getEnv, getEnvOptional, getEnvBoolean } from './env.js';
-import type { Config } from '../types/index.js';
+import { getEnv, getEnvOptional, getEnvBoolean } from './env';
+import type { Config } from '../types/index';
 
 export const config: Config = {
   server: {
@@ -25,7 +25,10 @@ export const config: Config = {
     appointmentTypesRaw: getEnvOptional('ZOHO_APPOINTMENT_TYPES') || '[]',
     staffMembersRaw: getEnvOptional('ZOHO_STAFF_MEMBERS') || '[]',
   },
+  session: {
+    backend: ((getEnvOptional('SESSION_STORE_BACKEND') || '').toLowerCase() as 'redis' | 'firestore' | 'memory') || (getEnvOptional('REDIS_URL') ? 'redis' : getEnvOptional('GOOGLE_CLOUD_PROJECT') ? 'firestore' : 'memory'),
+  },
 };
 
-export { getEnv, getEnvOptional, getEnvNumber, getEnvBoolean } from './env.js';
-export { validateEnv } from './validateEnv.js';
+export { getEnv, getEnvOptional, getEnvNumber, getEnvBoolean } from './env';
+export { validateEnv } from './validateEnv';
