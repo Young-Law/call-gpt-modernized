@@ -1,4 +1,5 @@
 import type { ISessionStore, SessionState } from '../types/index';
+import type { ISessionStore, SessionState } from '../types/index.js';
 
 interface FirestoreWrite {
   fields: Record<string, { stringValue?: string; integerValue?: string; nullValue?: null }>;

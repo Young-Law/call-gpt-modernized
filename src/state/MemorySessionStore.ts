@@ -1,4 +1,5 @@
 import type { ISessionStore, SessionState } from '../types/index';
+import type { ISessionStore, SessionState } from '../types/index.js';
 
 export class MemorySessionStore implements ISessionStore {
   public enabled = true;
