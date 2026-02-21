@@ -160,17 +160,26 @@ export class CallSessionManager {
   }
 
   private async saveSessionState(status: SessionState['status']): Promise<void> {
-    await this.sessionStore.setSessionValue(
-      this.callSid || this.streamSid,
-      {
+    try {
+      await this.sessionStore.setSessionValue(
+        this.callSid || this.streamSid,
+        {
+          callSid: this.callSid,
+          streamSid: this.streamSid,
+          status,
+          interactionCount: this.interactionCount,
+          updatedAt: new Date().toISOString(),
+        },
+        3600,
+      );
+    } catch (error) {
+      console.error('Failed to persist session state:', {
         callSid: this.callSid,
         streamSid: this.streamSid,
         status,
-        interactionCount: this.interactionCount,
-        updatedAt: new Date().toISOString(),
-      },
-      3600,
-    );
+        error: (error as Error).message,
+      });
+    }
   }
 }
 

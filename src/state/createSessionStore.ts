@@ -15,10 +15,6 @@ function getBackend(): SessionStoreBackend {
     return 'redis';
   }
 
-  if (process.env.GOOGLE_CLOUD_PROJECT) {
-    return 'firestore';
-  }
-
   return 'memory';
 }
 

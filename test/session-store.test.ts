@@ -11,6 +11,7 @@ describe('createSessionStore', () => {
     delete process.env.SESSION_STORE_BACKEND;
     delete process.env.REDIS_URL;
     delete process.env.GOOGLE_CLOUD_PROJECT;
+    delete process.env.GCP_ACCESS_TOKEN;
   });
 
   afterAll(() => {
@@ -24,7 +25,7 @@ describe('createSessionStore', () => {
     expect(store).toBeInstanceOf(RedisSessionStore);
   });
 
-  it('returns firestore store for firestore backend', () => {
+  it('returns firestore store for explicit firestore backend', () => {
     process.env.SESSION_STORE_BACKEND = 'firestore';
     process.env.GOOGLE_CLOUD_PROJECT = 'project-a';
     const store = createSessionStore();
@@ -32,6 +33,12 @@ describe('createSessionStore', () => {
   });
 
   it('defaults to memory backend with no env configured', () => {
+    const store = createSessionStore();
+    expect(store).toBeInstanceOf(MemorySessionStore);
+  });
+
+  it('defaults to memory backend when only GOOGLE_CLOUD_PROJECT is present', () => {
+    process.env.GOOGLE_CLOUD_PROJECT = 'project-a';
     const store = createSessionStore();
     expect(store).toBeInstanceOf(MemorySessionStore);
   });

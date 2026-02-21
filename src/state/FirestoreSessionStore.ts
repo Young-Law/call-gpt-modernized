@@ -9,12 +9,14 @@ export class FirestoreSessionStore implements ISessionStore {
   private projectId: string;
   private collection: string;
   private databaseId: string;
+  private accessToken: string;
 
   constructor() {
     this.projectId = process.env.GOOGLE_CLOUD_PROJECT || '';
     this.collection = process.env.FIRESTORE_COLLECTION || 'call_sessions';
     this.databaseId = process.env.FIRESTORE_DATABASE || '(default)';
-    this.enabled = Boolean(this.projectId);
+    this.accessToken = process.env.GCP_ACCESS_TOKEN || '';
+    this.enabled = Boolean(this.projectId && this.accessToken);
   }
 
   private getDocumentUrl(sessionId: string): string {
@@ -42,15 +44,10 @@ export class FirestoreSessionStore implements ISessionStore {
       return;
     }
 
-    const accessToken = process.env.GCP_ACCESS_TOKEN;
-    if (!accessToken) {
-      throw new Error('FirestoreSessionStore requires GCP_ACCESS_TOKEN when SESSION_STORE_BACKEND=firestore');
-    }
-
     const response = await fetch(this.getDocumentUrl(sessionId), {
       method: 'PATCH',
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${this.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(this.mapSessionToFirestore(data)),
