@@ -2,8 +2,8 @@ import 'colors';
 import { createClient, LiveTranscriptionEvents, type DeepgramClient } from '@deepgram/sdk';
 import { Buffer } from 'node:buffer';
 import EventEmitter from 'events';
-import { config } from '../config/index.js';
-import type { ITranscriptionService } from '../types/index.js';
+import { config } from '../config/index';
+import type { ITranscriptionService } from '../types/index';
 
 export class TranscriptionService extends EventEmitter implements ITranscriptionService {
   private dgConnection: ReturnType<DeepgramClient['listen']['live']>;

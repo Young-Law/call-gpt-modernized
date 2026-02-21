@@ -1,5 +1,5 @@
-import { findCrmLeadByEmail, createCrmLead, createCrmEvent } from './zoho_crm.js';
-import type { ToolHandler } from '../../types/index.js';
+import { findCrmLeadByEmail, createCrmLead, createCrmEvent } from './zoho_crm';
+import type { ToolHandler } from '../../types/index';
 
 interface CreateCrmLeadAndEventArgs {
   first_name: string;

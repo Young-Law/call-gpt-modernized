@@ -1,3 +1,5 @@
+import { toolDefinitions } from './tool-definitions';
+import type { ToolRegistry, ToolHandler } from '../types/index';
 import { toolDefinitions } from './tool-definitions.js';
 import type { ToolRegistry, ToolHandler } from '../types/index.js';
 

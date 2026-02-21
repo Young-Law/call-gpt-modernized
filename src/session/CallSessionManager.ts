@@ -6,6 +6,8 @@ import {
   TranscriptionService,
   TextToSpeechService,
   recordingService,
+} from '../services/index';
+import { createSessionStore } from '../state/createSessionStore';
 } from '../services/index.js';
 import { createSessionStore } from '../state/createSessionStore.js';
 import type { 
@@ -13,6 +15,7 @@ import type {
   SessionState, 
   GptReply,
   ISessionStore
+} from '../types/index';
 } from '../types/index.js';
 
 export class CallSessionManager {

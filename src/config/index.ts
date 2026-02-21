@@ -1,5 +1,5 @@
-import { getEnv, getEnvOptional, getEnvBoolean } from './env.js';
-import type { Config } from '../types/index.js';
+import { getEnv, getEnvOptional, getEnvBoolean } from './env';
+import type { Config } from '../types/index';
 
 export const config: Config = {
   server: {
@@ -30,5 +30,5 @@ export const config: Config = {
   },
 };
 
-export { getEnv, getEnvOptional, getEnvNumber, getEnvBoolean } from './env.js';
-export { validateEnv } from './validateEnv.js';
+export { getEnv, getEnvOptional, getEnvNumber, getEnvBoolean } from './env';
+export { validateEnv } from './validateEnv';
