@@ -7,11 +7,12 @@ import {
   TextToSpeechService,
   recordingService,
 } from '../services/index.js';
-import { RedisSessionStore } from '../state/RedisSessionStore.js';
+import { createSessionStore } from '../state/createSessionStore.js';
 import type { 
   TwilioMessage, 
   SessionState, 
-  GptReply 
+  GptReply,
+  ISessionStore
 } from '../types/index.js';
 
 export class CallSessionManager {
@@ -25,15 +26,15 @@ export class CallSessionManager {
   private streamService: StreamService;
   private transcriptionService: TranscriptionService;
   private ttsService: TextToSpeechService;
-  private sessionStore: RedisSessionStore;
+  private sessionStore: ISessionStore;
 
-  constructor(ws: WebSocket) {
+  constructor(ws: WebSocket, sessionStore: ISessionStore = createSessionStore()) {
     this.ws = ws;
     this.gptService = new GptService();
     this.streamService = new StreamService(ws);
     this.transcriptionService = new TranscriptionService();
     this.ttsService = new TextToSpeechService();
-    this.sessionStore = new RedisSessionStore();
+    this.sessionStore = sessionStore;
   }
 
   async initialize(): Promise<void> {

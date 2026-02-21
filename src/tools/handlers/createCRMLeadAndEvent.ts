@@ -21,7 +21,7 @@ interface CreateCrmLeadAndEventResult {
 }
 
 const createCrmLeadAndEvent: ToolHandler = async (args): Promise<CreateCrmLeadAndEventResult> => {
-  const typedArgs = args as CreateCrmLeadAndEventArgs;
+  const typedArgs = args as unknown as CreateCrmLeadAndEventArgs;
   const { 
     first_name, 
     last_name, 

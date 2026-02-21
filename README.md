@@ -7,8 +7,8 @@ A Twilio voice AI application for automated phone call handling with OpenAI GPT-
 - **Real-time Speech-to-Text**: Powered by Deepgram Nova-2
 - **AI Conversation**: OpenAI GPT-4 for natural language understanding
 - **Text-to-Speech**: Deepgram TTS for natural voice responses
-- **CRM Integration**: Zoho CRM for lead management and appointment scheduling
-- **Session Management**: Redis-backed session state for call persistence
+- **CRM Integration**: Zoho CRM with a ZDK-compatible client adapter for lead and event workflows
+- **Session Management**: Pluggable state backends (Firestore, Redis, or in-memory)
 
 ## Architecture
 
@@ -31,7 +31,10 @@ src/
 ├── session/                  # Session management
 │   └── CallSessionManager.ts
 ├── state/                    # State persistence
-│   └── RedisSessionStore.ts
+│   ├── createSessionStore.ts
+│   ├── FirestoreSessionStore.ts
+│   ├── RedisSessionStore.ts
+│   └── MemorySessionStore.ts
 ├── tools/                    # Tool definitions & handlers
 │   ├── tool-definitions.ts  # Tool metadata
 │   ├── manifest.ts          # OpenAI tool manifest
@@ -89,7 +92,16 @@ ZOHO_REFRESH_TOKEN=your_refresh_token
 ZOHO_APPOINTMENT_TYPES=[{"id":"1","name":"Consultation"}]
 ZOHO_STAFF_MEMBERS=[{"id":"1","name":"Staff Name"}]
 
-# Redis (optional)
+# Session persistence backend
+SESSION_STORE_BACKEND=firestore
+
+# Firestore backend
+GOOGLE_CLOUD_PROJECT=your_project
+FIRESTORE_COLLECTION=call_sessions
+FIRESTORE_DATABASE=(default)
+GCP_ACCESS_TOKEN=oauth_bearer_token
+
+# Redis backend (optional)
 REDIS_URL=redis://localhost:6379
 ```
 
