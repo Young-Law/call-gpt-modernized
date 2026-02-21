@@ -25,6 +25,9 @@ export const config: Config = {
     appointmentTypesRaw: getEnvOptional('ZOHO_APPOINTMENT_TYPES') || '[]',
     staffMembersRaw: getEnvOptional('ZOHO_STAFF_MEMBERS') || '[]',
   },
+  session: {
+    backend: ((getEnvOptional('SESSION_STORE_BACKEND') || '').toLowerCase() as 'redis' | 'firestore' | 'memory') || (getEnvOptional('REDIS_URL') ? 'redis' : getEnvOptional('GOOGLE_CLOUD_PROJECT') ? 'firestore' : 'memory'),
+  },
 };
 
 export { getEnv, getEnvOptional, getEnvNumber, getEnvBoolean } from './env.js';
