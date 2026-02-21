@@ -1,5 +1,4 @@
 import { zdkZohoClient } from '../../integrations/zoho/zdkClient';
-import { zdkZohoClient } from '../../integrations/zoho/zdkClient.js';
 import type {
   LeadDetails,
   EventDetails,
@@ -7,7 +6,6 @@ import type {
   AppointmentType,
   StaffMember,
 } from '../../types/index';
-} from '../../types/index.js';
 
 function parseSelectionList(rawList: string | undefined): AppointmentType[] | StaffMember[] {
   if (!rawList) {
