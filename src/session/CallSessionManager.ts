@@ -8,15 +8,12 @@ import {
   recordingService,
 } from '../services/index';
 import { createSessionStore } from '../state/createSessionStore';
-} from '../services/index.js';
-import { createSessionStore } from '../state/createSessionStore.js';
 import type { 
   TwilioMessage, 
   SessionState, 
   GptReply,
   ISessionStore
 } from '../types/index';
-} from '../types/index.js';
 
 export class CallSessionManager {
   private ws: WebSocket;

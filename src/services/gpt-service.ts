@@ -5,9 +5,6 @@ import type { ChatCompletionMessageParam } from 'openai/resources/chat/completio
 import tools from '../tools/manifest';
 import { toolRegistry } from '../tools/registry';
 import type { ChatMessage, GptReply, IGptService } from '../types/index';
-import tools from '../tools/manifest.js';
-import { toolRegistry } from '../tools/registry.js';
-import type { ChatMessage, GptReply, IGptService } from '../types/index.js';
 
 export class GptService extends EventEmitter implements IGptService {
   public openai: OpenAI;
