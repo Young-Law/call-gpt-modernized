@@ -10,6 +10,26 @@ export class MemorySessionStore implements ISessionStore {
     }
     this.sessions.set(sessionId, data);
   }
+
+  async getSessionValue(sessionId: string | null): Promise<SessionState | null> {
+    if (!sessionId) {
+      return null;
+    }
+
+    return this.sessions.get(sessionId) ?? null;
+  }
+
+  async deleteSessionValue(sessionId: string | null): Promise<void> {
+    if (!sessionId) {
+      return;
+    }
+
+    this.sessions.delete(sessionId);
+  }
+
+  async listSessionIds(): Promise<string[]> {
+    return Array.from(this.sessions.keys());
+  }
 }
 
 export default MemorySessionStore;
