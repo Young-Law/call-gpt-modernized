@@ -242,6 +242,9 @@ export interface ITextToSpeechService extends EventEmitter {
 export interface ISessionStore {
   enabled: boolean;
   setSessionValue(sessionId: string | null, data: SessionState, ttlSeconds?: number): Promise<void>;
+  getSessionValue?(sessionId: string | null): Promise<SessionState | null>;
+  deleteSessionValue?(sessionId: string | null): Promise<void>;
+  listSessionIds?(): Promise<string[]>;
 }
 
 // Recording service is a function

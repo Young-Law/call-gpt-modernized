@@ -1,5 +1,6 @@
 import { getEnv, getEnvOptional, getEnvBoolean } from './env';
 import type { Config } from '../types/index';
+import { resolveSessionBackend } from '../state/resolveSessionBackend';
 
 export const config: Config = {
   server: {
@@ -26,7 +27,7 @@ export const config: Config = {
     staffMembersRaw: getEnvOptional('ZOHO_STAFF_MEMBERS') || '[]',
   },
   session: {
-    backend: ((getEnvOptional('SESSION_STORE_BACKEND') || '').toLowerCase() as 'redis' | 'firestore' | 'memory') || (getEnvOptional('REDIS_URL') ? 'redis' : getEnvOptional('GOOGLE_CLOUD_PROJECT') ? 'firestore' : 'memory'),
+    backend: resolveSessionBackend(),
   },
 };
 

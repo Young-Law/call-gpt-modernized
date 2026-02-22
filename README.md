@@ -92,18 +92,34 @@ ZOHO_REFRESH_TOKEN=your_refresh_token
 ZOHO_APPOINTMENT_TYPES=[{"id":"1","name":"Consultation"}]
 ZOHO_STAFF_MEMBERS=[{"id":"1","name":"Staff Name"}]
 
-# Session persistence backend
-SESSION_STORE_BACKEND=firestore
+# Session persistence backend (local dev default)
+SESSION_STORE_BACKEND=memory
+
+# Memory backend
+# Process-local, non-persistent state. Data is lost on restart.
+SESSION_STORE_BACKEND=memory
+
+# Redis backend
+SESSION_STORE_BACKEND=redis
+REDIS_URL=redis://localhost:6379
 
 # Firestore backend
+SESSION_STORE_BACKEND=firestore
 GOOGLE_CLOUD_PROJECT=your_project
 FIRESTORE_COLLECTION=call_sessions
 FIRESTORE_DATABASE=(default)
 GCP_ACCESS_TOKEN=oauth_bearer_token
-
-# Redis backend (optional)
-REDIS_URL=redis://localhost:6379
 ```
+
+### Session backend selection and fallback
+
+When `SESSION_STORE_BACKEND` is unset (or invalid), backend resolution follows this precedence:
+
+1. `REDIS_URL` present → `redis`
+2. `GOOGLE_CLOUD_PROJECT` present → `firestore`
+3. Otherwise → `memory`
+
+An explicit valid `SESSION_STORE_BACKEND` (`memory`, `redis`, `firestore`) always overrides fallback detection.
 
 ## Development
 
