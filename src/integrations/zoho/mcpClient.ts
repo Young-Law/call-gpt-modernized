@@ -7,6 +7,12 @@ interface JsonRpcRequest {
   params?: Record<string, unknown>;
 }
 
+interface JsonRpcNotification {
+  jsonrpc: '2.0';
+  method: string;
+  params?: Record<string, unknown>;
+}
+
 interface JsonRpcError {
   code: number;
   message: string;
@@ -25,11 +31,6 @@ interface PendingRequest {
   reject: (reason?: unknown) => void;
 }
 
-export interface ZohoMcpCall {
-  tool: string;
-  arguments: Record<string, unknown>;
-}
-
 function createMcpError(message: string, details?: unknown): Error {
   const detailString = details ? ` (${JSON.stringify(details)})` : '';
   return new Error(`[Zoho MCP] ${message}${detailString}`);
@@ -41,6 +42,7 @@ class ZohoMcpClient {
   private readonly pending = new Map<number, PendingRequest>();
   private buffer = '';
   private started = false;
+  private lastSpawnError: Error | null = null;
 
   private serverCommand(): { command: string; args: string[] } {
     const explicitCommand = process.env.ZOHO_MCP_COMMAND;
@@ -51,6 +53,19 @@ class ZohoMcpClient {
     const pythonBin = process.env.ZOHO_MCP_PYTHON_BIN?.trim() || 'python3';
     const serverPath = process.env.ZOHO_MCP_SERVER_PATH?.trim() || 'mcp/zoho_server/server.py';
     return { command: pythonBin, args: [serverPath] };
+  }
+
+  private rejectAllPending(error: Error): void {
+    for (const [, pending] of this.pending.entries()) {
+      pending.reject(error);
+    }
+    this.pending.clear();
+  }
+
+  private resetProcessState(): void {
+    this.process = null;
+    this.started = false;
+    this.buffer = '';
   }
 
   private ensureProcess(): ChildProcessWithoutNullStreams {
@@ -65,6 +80,8 @@ class ZohoMcpClient {
       env: process.env,
     });
 
+    this.lastSpawnError = null;
+
     child.stdout.setEncoding('utf8');
     child.stdout.on('data', (chunk: string) => this.handleStdout(chunk));
 
@@ -76,16 +93,19 @@ class ZohoMcpClient {
       }
     });
 
+    child.on('error', (error) => {
+      this.lastSpawnError = createMcpError('Unable to start MCP server process', {
+        message: error.message,
+      });
+      this.rejectAllPending(this.lastSpawnError);
+      this.resetProcessState();
+    });
+
     child.on('exit', (code, signal) => {
       const reason = `Zoho MCP process exited (code=${code}, signal=${signal})`;
       const error = createMcpError(reason);
-      for (const [, pending] of this.pending.entries()) {
-        pending.reject(error);
-      }
-      this.pending.clear();
-      this.process = null;
-      this.started = false;
-      this.buffer = '';
+      this.rejectAllPending(error);
+      this.resetProcessState();
     });
 
     this.process = child;
@@ -151,10 +171,39 @@ class ZohoMcpClient {
 
       child.stdin.write(`${serialized}\n`, (error) => {
         if (!error) {
+          if (this.lastSpawnError) {
+            this.pending.delete(id);
+            reject(this.lastSpawnError);
+          }
           return;
         }
         this.pending.delete(id);
-        reject(error);
+        reject(createMcpError('Failed to send MCP request', { message: error.message }));
+      });
+    });
+  }
+
+  private async sendNotification(method: string, params?: Record<string, unknown>): Promise<void> {
+    const child = this.ensureProcess();
+    const payload: JsonRpcNotification = {
+      jsonrpc: '2.0',
+      method,
+      params,
+    };
+
+    await new Promise<void>((resolve, reject) => {
+      child.stdin.write(`${JSON.stringify(payload)}\n`, (error) => {
+        if (error) {
+          reject(createMcpError('Failed to send MCP notification', { message: error.message }));
+          return;
+        }
+
+        if (this.lastSpawnError) {
+          reject(this.lastSpawnError);
+          return;
+        }
+
+        resolve();
       });
     });
   }
@@ -169,17 +218,16 @@ class ZohoMcpClient {
       capabilities: {},
       clientInfo: { name: 'call-gpt-modernized', version: '2.0.0' },
     });
+    await this.sendNotification('notifications/initialized');
     this.started = true;
   }
 
   async callTool(name: string, args: Record<string, unknown>): Promise<unknown> {
     await this.ensureInitialized();
-    const result = await this.send('tools/call', {
+    return this.send('tools/call', {
       name,
       arguments: args,
     });
-
-    return result;
   }
 }
 
