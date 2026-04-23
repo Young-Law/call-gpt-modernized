@@ -1,7 +1,10 @@
 import { executeWithAuthRetry } from '../../tools/handlers/zoho_auth';
 import type { CrmLead, EventDetails, LeadDetails } from '../../types/index';
+import { getZohoBackend } from './backend';
+import { callZohoMcpTool, normalizeMcpToolResult } from './mcpClient';
 
-const ZOHO_CRM_API_URL = 'https://www.zohoapis.com/crm/v2';
+const ZOHO_API_DOMAIN = process.env.ZOHO_API_DOMAIN || 'https://www.zohoapis.com';
+const ZOHO_CRM_API_URL = `${ZOHO_API_DOMAIN.replace(/\/$/, '')}/crm/v2`; 
 
 interface ZohoHttpResponse<T> {
   data?: T;
@@ -16,6 +19,13 @@ interface ZohoZdk {
       coql?: (params: Record<string, unknown>) => Promise<unknown>;
     };
   };
+}
+
+interface ZohoCrmAdapter {
+  createLead(leadDetails: LeadDetails): Promise<string>;
+  createEvent(eventDetails: EventDetails): Promise<string>;
+  findLeadByEmail(email: string): Promise<CrmLead | null>;
+  getEventsByTimeRange(startDateTime: string, endDateTime: string): Promise<Array<{ id: string }>>;
 }
 
 function readZdkClient(): ZohoZdk | null {
@@ -64,7 +74,7 @@ async function zohoRequest<T>(
   });
 }
 
-export class ZdkZohoClient {
+class DirectZohoClient implements ZohoCrmAdapter {
   private readonly zdk: ZohoZdk | null;
 
   constructor() {
@@ -168,6 +178,57 @@ export class ZdkZohoClient {
 
     const response = await zohoRequest<{ data?: Array<{ id: string }> }>('POST', '/coql', { body: { select_query: query } });
     return response.data?.data || [];
+  }
+}
+
+class McpZohoClient implements ZohoCrmAdapter {
+  async createLead(leadDetails: LeadDetails): Promise<string> {
+    const result = await callZohoMcpTool('createLead', { leadDetails });
+    const parsed = normalizeMcpToolResult<{ id: string }>(result);
+    return parsed.id;
+  }
+
+  async createEvent(eventDetails: EventDetails): Promise<string> {
+    const result = await callZohoMcpTool('createEvent', { eventDetails });
+    const parsed = normalizeMcpToolResult<{ id: string }>(result);
+    return parsed.id;
+  }
+
+  async findLeadByEmail(email: string): Promise<CrmLead | null> {
+    const result = await callZohoMcpTool('findLeadByEmail', { email });
+    const parsed = normalizeMcpToolResult<{ lead: CrmLead | null }>(result);
+    return parsed.lead;
+  }
+
+  async getEventsByTimeRange(startDateTime: string, endDateTime: string): Promise<Array<{ id: string }>> {
+    const result = await callZohoMcpTool('getEventsByTimeRange', { startDateTime, endDateTime });
+    const parsed = normalizeMcpToolResult<{ events: Array<{ id: string }> }>(result);
+    return parsed.events;
+  }
+}
+
+export class ZdkZohoClient implements ZohoCrmAdapter {
+  private readonly directClient = new DirectZohoClient();
+  private readonly mcpClient = new McpZohoClient();
+
+  private getActiveClient(): ZohoCrmAdapter {
+    return getZohoBackend() === 'mcp' ? this.mcpClient : this.directClient;
+  }
+
+  async createLead(leadDetails: LeadDetails): Promise<string> {
+    return this.getActiveClient().createLead(leadDetails);
+  }
+
+  async createEvent(eventDetails: EventDetails): Promise<string> {
+    return this.getActiveClient().createEvent(eventDetails);
+  }
+
+  async findLeadByEmail(email: string): Promise<CrmLead | null> {
+    return this.getActiveClient().findLeadByEmail(email);
+  }
+
+  async getEventsByTimeRange(startDateTime: string, endDateTime: string): Promise<Array<{ id: string }>> {
+    return this.getActiveClient().getEventsByTimeRange(startDateTime, endDateTime);
   }
 }
 

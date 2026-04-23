@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const ZOHO_TOKEN_URL = 'https://accounts.zoho.com/oauth/v2/token';
+const ZOHO_ACCOUNTS_URL = process.env.ZOHO_ACCOUNTS_URL || 'https://accounts.zoho.com';
+const ZOHO_TOKEN_URL = `${ZOHO_ACCOUNTS_URL.replace(/\/$/, '')}/oauth/v2/token`; 
 const ACCESS_TOKEN_EXPIRY_BUFFER_MS = 60 * 1000;
 
 function getRequiredEnv(name: string): string {

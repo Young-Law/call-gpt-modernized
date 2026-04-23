@@ -92,6 +92,20 @@ ZOHO_REFRESH_TOKEN=your_refresh_token
 ZOHO_APPOINTMENT_TYPES=[{"id":"1","name":"Consultation"}]
 ZOHO_STAFF_MEMBERS=[{"id":"1","name":"Staff Name"}]
 
+# Zoho backend selection
+# direct (default) keeps in-process REST/ZDK adapter behavior
+# mcp routes Zoho operations through the Python MCP server
+ZOHO_BACKEND=direct
+
+# Optional MCP process overrides (only used when ZOHO_BACKEND=mcp)
+ZOHO_MCP_PYTHON_BIN=python3
+ZOHO_MCP_SERVER_PATH=mcp/zoho_server/server.py
+# ZOHO_MCP_COMMAND=/absolute/path/to/custom-mcp-launcher
+
+# Optional Zoho API endpoints (shared by direct and mcp auth flows)
+ZOHO_ACCOUNTS_URL=https://accounts.zoho.com
+ZOHO_API_DOMAIN=https://www.zohoapis.com
+
 # Session persistence backend (local dev default)
 SESSION_STORE_BACKEND=memory
 
@@ -110,6 +124,31 @@ FIRESTORE_COLLECTION=call_sessions
 FIRESTORE_DATABASE=(default)
 GCP_ACCESS_TOKEN=oauth_bearer_token
 ```
+
+
+### Zoho backend modes
+
+- **Direct mode (`ZOHO_BACKEND=direct`)**: default behavior. The existing adapter talks to Zoho directly (ZDK if available, otherwise Zoho REST).
+- **MCP mode (`ZOHO_BACKEND=mcp`)**: the same adapter methods dispatch to a Python FastMCP server over stdio.
+
+Both modes preserve the same tool names and handler flow in the Node app.
+
+### Running MCP backend in development
+
+```bash
+# Terminal 1: run the Node app with MCP backend
+export ZOHO_BACKEND=mcp
+npm run dev
+
+# Optional: pre-run / inspect server directly
+cd mcp/zoho_server
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python server.py
+```
+
+The Node process can launch the MCP server automatically via stdio using `ZOHO_MCP_PYTHON_BIN` + `ZOHO_MCP_SERVER_PATH` (or a single `ZOHO_MCP_COMMAND`).
 
 ### Session backend selection and fallback
 
